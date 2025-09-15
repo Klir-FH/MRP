@@ -14,9 +14,6 @@ namespace MRP.Models
         public List<string> Genres { get; set; } = new();
         public int AgeRestriction { get; set; }
 
-
-
-
         public int? Owner { get; set; } = null;
         public List<int> RatingValues { get; set; } = new();
         public List<int> LikedBy { get; set; } = new();
@@ -24,12 +21,6 @@ namespace MRP.Models
         //may be obsulent
         public List<int> FavouritedBy { get; set; } = new();
 
-        private uint rating;
-        public uint Rating
-		{
-			get { return rating; }
-			set { if (value >= 1 && value <= 5) { rating = value; } }
-		}
-
+        public double? RatingAverage { get; set; } = null;
 	}
 }

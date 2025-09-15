@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36401.2
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MRP", "MRP\MRP.csproj", "{F71C87ED-22AB-416B-95E9-977969C92CB9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MRP-Client", "MRP\MRP-Client.csproj", "{F71C87ED-22AB-416B-95E9-977969C92CB9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MRP-Server", "MRP-Server\MRP-Server.csproj", "{D4D8A182-1ED5-41FB-BC8E-BF35C92E5CED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseModels", "DatabaseModels\DatabaseModels.csproj", "{95D0695A-4831-4E73-8461-C892E65925A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{F71C87ED-22AB-416B-95E9-977969C92CB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F71C87ED-22AB-416B-95E9-977969C92CB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F71C87ED-22AB-416B-95E9-977969C92CB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4D8A182-1ED5-41FB-BC8E-BF35C92E5CED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4D8A182-1ED5-41FB-BC8E-BF35C92E5CED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4D8A182-1ED5-41FB-BC8E-BF35C92E5CED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4D8A182-1ED5-41FB-BC8E-BF35C92E5CED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95D0695A-4831-4E73-8461-C892E65925A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95D0695A-4831-4E73-8461-C892E65925A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95D0695A-4831-4E73-8461-C892E65925A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95D0695A-4831-4E73-8461-C892E65925A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
