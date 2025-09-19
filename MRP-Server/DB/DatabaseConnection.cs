@@ -1,16 +1,11 @@
-﻿using DatabaseAccess;
-using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Npgsql;
 
-namespace MRP_Server
+namespace MRP_Server.DB
 {
-    public class Database
+    public class DatabaseConnection
     {
         public const string connectionString = "Host=localhost;Port=15432;Database=mrpdb;Username=mrp_admin;Password=admin";
+
         public void StartConnection()
         {
 

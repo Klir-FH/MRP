@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace MRP_Server
 {
@@ -36,24 +32,38 @@ namespace MRP_Server
             {
                 var context = _listener.EndGetContext(result);
                 var request = context.Request;
-
                 var response = context.Response;
-                string responseText = RequestHandler(request);
-                byte[] buffer = Encoding.UTF8.GetBytes(responseText);
-                response.ContentLength64 = buffer.Length;
-                using (var output = response.OutputStream)
-                {
-                    output.Write(buffer, 0, buffer.Length);
-                }
 
+                string responseText = RequestHandler(request,response);
 
+                ResponseWriter(response, responseText);
                 Recieve();
             }
         }
 
-        private string RequestHandler(HttpListenerRequest request)
+        private string RequestHandler(HttpListenerRequest request, HttpListenerResponse response)
         {
-            return "i responded";
+            string path = request.Url.AbsolutePath.ToLower();
+
+            if (path == "/login" && request.HttpMethod == "POST") return HandleLogin();
+
+            response.StatusCode = (int)HttpStatusCode.NotFound;
+            return "Resource not found";
+        }
+
+        private string HandleLogin()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ResponseWriter(HttpListenerResponse response, string body)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(body);
+            response.ContentLength64 = buffer.Length;
+            using (var output = response.OutputStream)
+            {
+                output.Write(buffer, 0, buffer.Length);
+            }
         }
     }
 }

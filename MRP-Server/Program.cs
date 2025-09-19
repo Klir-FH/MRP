@@ -1,4 +1,6 @@
-﻿namespace MRP_Server
+﻿using MRP_Server.DB;
+
+namespace MRP_Server
 {
     internal class Program
     {
@@ -7,7 +9,7 @@
             HttpServer server = new HttpServer();
             server.Start();
 
-            Database database = new();
+            DatabaseConnection database = new();
             database.StartConnection();
             while (true)
             {
