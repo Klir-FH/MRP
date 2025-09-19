@@ -15,8 +15,6 @@ namespace DatabaseAccess
             _connection = connection;
 
             var sql = @"
-
-
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY
         );

@@ -10,19 +10,29 @@ namespace MRP_Server
 {
     public class Database
     {
-        public const string connectionString = "Host=localhost;Port=5432;Database=mrpdb;Username=mrp_admin;Password=admin";
+        public const string connectionString = "Host=localhost;Port=15432;Database=mrpdb;Username=mrp_admin;Password=admin";
         public void StartConnection()
         {
 
             using var conn = new NpgsqlConnection(connectionString);
-            conn.Open();
-            Thread.Sleep(500);
-            DbInitiation.CreateTables(conn);
-           
-            using var cmd = new NpgsqlCommand("SELECT NOW()", conn);
-            var result = cmd.ExecuteScalar();
+            try
+            {
+                conn.Open();
+            }
+            catch (TimeoutException ex)
+            {
+                Console.WriteLine("Connection failed... Trying again in 5000ms");
+                Thread.Sleep(5000);
+                conn.Open();
+            }
+            
+            Console.WriteLine("DB started");
 
-            Console.WriteLine($"Postgres says: {result}");
+            Thread.Sleep(500);
+
+            DbInitiation.CreateTables(conn);
+
+
         }
     }
 }
