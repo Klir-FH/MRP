@@ -9,7 +9,6 @@ namespace MRP.Models
     public class User
     {
         public int Id { get; set; }
-        public Credentials UserCredentials { get; set; }
         public List<int> RatingHistory { get; set; } = new();
         public List<int> FavouriteMediaEntries { get; set; } = new();
     }

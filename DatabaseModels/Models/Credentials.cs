@@ -8,7 +8,9 @@ namespace MRP.Models
 {
     public class Credentials
     {
+        
         public int Id { get; set; }
+        public int UserId { get; set; }
         public string Username { get; set; }
         public string HashedPassword { get; set; }
         public string Salt { get; set; }

@@ -9,7 +9,7 @@ namespace MRP_Server
 {
     public class HttpServer
     {
-        private const int Port = 8080;
+        private const int Port = 8082;
         private HttpListener _listener = null;
 
 
