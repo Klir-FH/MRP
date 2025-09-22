@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Models
+namespace MRP_DAL.Interfaces
 {
-    public enum UserMediaInteractionType
+    internal interface ICredentialsRepository
     {
-        Like = 0,
-        Favourite = 1
     }
 }

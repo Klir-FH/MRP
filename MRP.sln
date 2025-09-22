@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MRP-Server", "MRP-Server\MR
 		{95D0695A-4831-4E73-8461-C892E65925A2} = {95D0695A-4831-4E73-8461-C892E65925A2}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MRP-DAL", "MRP-DAL\MRP-DAL.csproj", "{05E00E61-4E5C-4153-BC71-B5E0217D8BE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +32,10 @@ Global
 		{69C47BD4-2110-4716-9369-02F09243DE1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69C47BD4-2110-4716-9369-02F09243DE1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69C47BD4-2110-4716-9369-02F09243DE1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05E00E61-4E5C-4153-BC71-B5E0217D8BE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05E00E61-4E5C-4153-BC71-B5E0217D8BE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05E00E61-4E5C-4153-BC71-B5E0217D8BE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05E00E61-4E5C-4153-BC71-B5E0217D8BE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

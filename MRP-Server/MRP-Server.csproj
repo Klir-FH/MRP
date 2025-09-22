@@ -9,14 +9,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DAL\**" />
+    <EmbeddedResource Remove="DAL\**" />
+    <None Remove="DAL\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Npgsql" Version="9.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DAL\Interfaces\" />
-    <Folder Include="DAL\Repositories\" />
+    <Folder Include="Http\Controllers\" />
     <Folder Include="Http\Controllers\" />
     <Folder Include="Services\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MRP-DAL\MRP-DAL.csproj" />
   </ItemGroup>
 
 </Project>

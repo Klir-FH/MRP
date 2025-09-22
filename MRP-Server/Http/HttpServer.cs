@@ -45,7 +45,7 @@ namespace MRP_Server.Http
         {
             string path = request.Url.AbsolutePath.ToLower();
 
-            if (path == "/login" && request.HttpMethod == "POST") return HandleLogin();
+            if (path == "/login" && request.HttpMethod == HttpMethod.Post.ToString()) return HandleLogin();
 
             response.StatusCode = (int)HttpStatusCode.NotFound;
             return "Resource not found";

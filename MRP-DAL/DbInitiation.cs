@@ -1,6 +1,6 @@
 ﻿using Npgsql;
 
-namespace MRP_Server.DB
+namespace MRP_DAL
 {
     public static class DbInitiation
     {
@@ -11,13 +11,13 @@ namespace MRP_Server.DB
 
             var sql = @"
         CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(100) NOT NULL UNIQUE
         );
 
         CREATE TABLE IF NOT EXISTS credentials (
             id SERIAL PRIMARY KEY,
             user_id INT UNIQUE NOT NULL,
-            username VARCHAR(100) NOT NULL UNIQUE,
             hashed_password TEXT NOT NULL,
             salt TEXT NOT NULL,
             CONSTRAINT fk_credentials_user FOREIGN KEY (user_id)

@@ -1,6 +1,6 @@
 ﻿using Npgsql;
 
-namespace MRP_Server.DB
+namespace MRP_DAL
 {
     public class DatabaseConnection
     {
