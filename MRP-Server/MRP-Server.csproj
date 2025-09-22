@@ -13,7 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DAL\Interfaces\" />
     <Folder Include="DAL\Repositories\" />
+    <Folder Include="Http\Controllers\" />
     <Folder Include="Services\" />
   </ItemGroup>
 

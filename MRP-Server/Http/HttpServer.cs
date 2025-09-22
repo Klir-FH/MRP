@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 
-namespace MRP_Server
+namespace MRP_Server.Http
 {
     public class HttpServer
     {
