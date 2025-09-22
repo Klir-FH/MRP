@@ -13,5 +13,6 @@ namespace Models
         // Type define wether its a favourite or like
         public UserMediaInteractionType Type { get; set; }
 
+
     }
 }
