@@ -12,6 +12,5 @@ namespace MRP.Models
         public int Id { get; set; }
         public int UserId { get; set; }
         public string HashedPassword { get; set; }
-        public string Salt { get; set; }
     }
 }

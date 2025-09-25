@@ -19,7 +19,6 @@ namespace MRP_DAL
             id SERIAL PRIMARY KEY,
             user_id INT UNIQUE NOT NULL,
             hashed_password TEXT NOT NULL,
-            salt TEXT NOT NULL,
             CONSTRAINT fk_credentials_user FOREIGN KEY (user_id)
                 REFERENCES users (id) ON DELETE CASCADE
         );
