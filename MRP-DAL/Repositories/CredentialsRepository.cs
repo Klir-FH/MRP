@@ -18,7 +18,7 @@ namespace MRP_DAL.Repositories
             _conn = conn;
         }
 
-        public async Task<bool> TryLogin(string username, string psw)
+        public async Task<string?> GetHashedPasswordByUsernameAsync(string username)
         {
             const string sql = @"
                 SELECT c.hashed_password
@@ -31,22 +31,15 @@ namespace MRP_DAL.Repositories
             cmd.Parameters.AddWithValue("username", username);
 
             var result = await cmd.ExecuteScalarAsync();
-            if (result is string storedHash)
-            {
-                return BCrypt.Net.BCrypt.Verify(psw, storedHash);
-            }
-
-            return false;
+            return (string)result;
         }
 
-        public async Task<bool> SetCredentials(string username, string password, int userId)
+        public async Task<bool> InsertCredentialsAsync(string username, string hashedPsw, int userId)
         {
             const string sql = @"
                 INSERT INTO credentials (user_id, hashed_password)
                 VALUES (@user_id, @hashed_password)
                 RETURNING id;";
-
-            var hashedPsw = BCrypt.Net.BCrypt.HashPassword(password);
 
             using var cmd = new NpgsqlCommand(sql, _conn);
             cmd.Parameters.AddWithValue("user_id", userId);
@@ -57,26 +50,5 @@ namespace MRP_DAL.Repositories
 
         }
 
-        public Credentials? GetByUsername(string username)
-        {
-            using var cmd = new NpgsqlCommand(
-                "SELECT id, username, hashedpassword WHERE username = @username",
-                _conn);
-            cmd.Parameters.AddWithValue("username", username);
-
-            using var reader = cmd.ExecuteReader();
-
-
-            if (reader.Read())
-            {
-                return new Credentials
-                {
-                    Id = reader.GetInt32(0),
-                    HashedPassword = reader.GetString(1)
-                };
-            }
-
-            return null;
-        }
     }
 }
