@@ -5,11 +5,11 @@ namespace MRP_DAL
     public class DatabaseConnection
     {
         public const string connectionString = "Host=localhost;Port=15432;Database=mrpdb;Username=mrp_admin;Password=admin";
-
+        public NpgsqlConnection? conn { get; set; }
         public void StartConnection()
         {
 
-            using var conn = new NpgsqlConnection(connectionString);
+            conn = new NpgsqlConnection(connectionString);
             try
             {
                 conn.Open();

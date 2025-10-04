@@ -15,17 +15,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Http\Controllers\" />
     <Folder Include="Http\Controllers\" />
-    <Folder Include="Services\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DatabaseModels\Models.csproj" />
     <ProjectReference Include="..\MRP-DAL\MRP-DAL.csproj" />
   </ItemGroup>
 

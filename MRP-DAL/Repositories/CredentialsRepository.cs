@@ -1,5 +1,6 @@
 ﻿using BCrypt.Net;
 using MRP.Models;
+using MRP_DAL.Interfaces;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MRP_DAL.Repositories
 {
-    public class CredentialsRepository
+    public class CredentialsRepository : ICredentialsRepository
     {
         private readonly NpgsqlConnection _conn;
 
@@ -31,10 +32,10 @@ namespace MRP_DAL.Repositories
             cmd.Parameters.AddWithValue("username", username);
 
             var result = await cmd.ExecuteScalarAsync();
-            return (string)result;
+            return result as string;
         }
 
-        public async Task<bool> InsertCredentialsAsync(string username, string hashedPsw, int userId)
+        public async Task<bool> InsertCredentialsAsync(int userId,string hashedPsw, string username)
         {
             const string sql = @"
                 INSERT INTO credentials (user_id, hashed_password)

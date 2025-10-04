@@ -9,8 +9,7 @@ namespace MRP_DAL.Interfaces
 {
     public interface ICredentialsRepository
     {
-        Credentials? GetByUsername(string username);
-        Task<bool> SetCredentials(string username, string password, int userId);
-        Task<bool> TryLogin(string username, string hashedPassword);
+        Task<string?> GetHashedPasswordByUsernameAsync(string username);
+        Task<bool> InsertCredentialsAsync(int userId, string hashedPsw, string username);
     }
 }
