@@ -2,6 +2,7 @@
 using MRP_DAL;
 using MRP_DAL.Repositories;
 using MRP_Server.Http;
+using MRP_Server.Http.Controllers;
 using MRP_Server.Services;
 
 namespace MRP_Server
@@ -12,15 +13,20 @@ namespace MRP_Server
         {
             DatabaseConnection database = new();
             database.StartConnection();
-            var conn = database.conn;
-            var userRepo = new UserRepository(conn);
-            var credentialsRepo = new CredentialsRepository(conn);
+            var connection = database.Connection;
+
+            var userRepo = new UserRepository(connection);
+            var credentialsRepo = new CredentialsRepository(connection);
+            var mediaRepo = new MediaEntryRepository(connection);
+
+            var Auth = new AuthService(credentialsRepo, userRepo);
             var tokenManager = new TokenManager();
-            var authService = new AuthService(credentialsRepo,userRepo);
+            var serverAuth = new ServerAuthService(Auth, userRepo, tokenManager);
 
-            var serverAuth = new ServerAuthService(authService, userRepo, tokenManager);
+            var userController = new UserController(serverAuth);
+            var mediaController = new MediaController(mediaRepo,serverAuth);
 
-            HttpServer server = new HttpServer(serverAuth);
+            var server = new HttpServer(userController, mediaController);
             await server.StartAsync("http://localhost:8080/");
 
         }

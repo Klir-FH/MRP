@@ -13,9 +13,9 @@ namespace MRP.Models
         public string Description { get; set; }
         public string ReleaseYear { get; set; }
         public List<string> Genres { get; set; } = new();
-        public int AgeRestriction { get; set; }
+        public int? AgeRestriction { get; set; }
 
-        public int? Owner { get; set; } = null;
+        public int? OwnerId { get; set; } = null;
         public List<int> RatingValues { get; set; } = new();
         public List<int> LikedBy { get; set; } = new();
         public MediaType Type { get; set; }

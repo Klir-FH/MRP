@@ -13,6 +13,7 @@ namespace MRP_Server.Services
         private readonly AuthService _authService;
         private readonly TokenManager _tokenManager;
         private readonly UserRepository _userRepository;
+        public int? TokenUserId => _tokenManager.UserId;
 
         public ServerAuthService(AuthService authService, UserRepository userRepository, TokenManager tokenManager)
         {
@@ -31,7 +32,7 @@ namespace MRP_Server.Services
             if (userId == null)
                 return null;
 
-            return _tokenManager.GenerateJwtToken(username);
+            return _tokenManager.GenerateJwtToken(username, userId.Value);
         }
         public async Task<bool> RegisterAsync(string username, string password)
         {

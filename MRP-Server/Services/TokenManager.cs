@@ -1,8 +1,9 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using MRP.Models;
 using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Cryptography;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace MRP_Server.Services
@@ -13,13 +14,14 @@ namespace MRP_Server.Services
         private readonly string _RsaPath = Path.Combine(AppContext.BaseDirectory, "rsa_key.json");
         public RsaSecurityKey RsaSecurityKey { get; private set; }
         public string? Subject { get; private set; }
+        public int? UserId { get; set; }
 
         public TokenManager()
         {
             RsaSecurityKey = GenerateOrLoadRsaKey();
         }
 
-        public string GenerateJwtToken(string subject)
+        public string GenerateJwtToken(string subject, int userId)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var descriptor = new SecurityTokenDescriptor
@@ -27,6 +29,7 @@ namespace MRP_Server.Services
                 Subject = new ClaimsIdentity(
                 [
                     new Claim(JwtRegisteredClaimNames.Sub, subject),
+                    new Claim("uid", userId.ToString()),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 ]),
 
@@ -48,23 +51,26 @@ namespace MRP_Server.Services
                 ValidateIssuer = true,
                 ValidateAudience = false,
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero,
-
-                NameClaimType = JwtRegisteredClaimNames.Sub
+                ClockSkew = TimeSpan.Zero
+                //NameClaimType = JwtRegisteredClaimNames.Sub
             };
+
 
             try
             {
                 var principal = handler.ValidateToken(token, parameters, out _);
+                Subject = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
-                Subject = principal.Identity?.Name
-                          ?? principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-                          ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var uidClaim = principal.FindFirst("uid")?.Value;
+                if (int.TryParse(uidClaim, out var id))
+                    UserId = id;
 
                 return true;
             }
-            catch (SecurityTokenExpiredException) { return false; }
-            catch (SecurityTokenException) { return false; }
+            catch
+            {
+                return false;
+            }
         }
 
         private RsaSecurityKey GenerateOrLoadRsaKey()

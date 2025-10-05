@@ -12,23 +12,23 @@ namespace MRP_DAL.Repositories
 {
     public class CredentialsRepository : ICredentialsRepository
     {
-        private readonly NpgsqlConnection _conn;
+        private readonly NpgsqlConnection _connection;
 
-        public CredentialsRepository(NpgsqlConnection conn)
+        public CredentialsRepository(NpgsqlConnection connection)
         {
-            _conn = conn;
+            _connection = connection;
         }
 
         public async Task<string?> GetHashedPasswordByUsernameAsync(string username)
         {
-            const string sql = @"
+            const string sqlScript = @"
                 SELECT c.hashed_password
                 FROM credentials c
                 INNER JOIN users u ON u.id = c.user_id
                 WHERE u.username = @username
                 LIMIT 1;";
 
-            using var cmd = new NpgsqlCommand(sql, _conn);
+            using var cmd = new NpgsqlCommand(sqlScript, _connection);
             cmd.Parameters.AddWithValue("username", username);
 
             var result = await cmd.ExecuteScalarAsync();
@@ -37,12 +37,12 @@ namespace MRP_DAL.Repositories
 
         public async Task<bool> InsertCredentialsAsync(int userId,string hashedPsw, string username)
         {
-            const string sql = @"
+            const string sqlScript = @"
                 INSERT INTO credentials (user_id, hashed_password)
                 VALUES (@user_id, @hashed_password)
                 RETURNING id;";
 
-            using var cmd = new NpgsqlCommand(sql, _conn);
+            using var cmd = new NpgsqlCommand(sqlScript, _connection);
             cmd.Parameters.AddWithValue("user_id", userId);
             cmd.Parameters.AddWithValue("hashed_password", hashedPsw);
 

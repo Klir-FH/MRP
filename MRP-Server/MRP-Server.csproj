@@ -21,11 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Http\Controllers\" />
-    <Folder Include="Http\Controllers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\DatabaseModels\Models.csproj" />
     <ProjectReference Include="..\MRP-DAL\MRP-DAL.csproj" />
   </ItemGroup>

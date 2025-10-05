@@ -11,16 +11,16 @@ namespace MRP_DAL.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private readonly NpgsqlConnection _conn;
+        private readonly NpgsqlConnection _connection;
 
-        public UserRepository(NpgsqlConnection conn)
+        public UserRepository(NpgsqlConnection connection)
         {
-            _conn = conn;
+            _connection = connection;
         }
         public async Task<int?> GetUserIdByUsernameAsync(string username)
         {
-            const string sql = "SELECT id FROM users WHERE username = @username LIMIT 1;";
-            using var cmd = new NpgsqlCommand(sql, _conn);
+            const string sqlScript = "SELECT id FROM users WHERE username = @username LIMIT 1;";
+            using var cmd = new NpgsqlCommand(sqlScript, _connection);
             cmd.Parameters.AddWithValue("username", username);
 
             var result = await cmd.ExecuteScalarAsync();
@@ -29,12 +29,12 @@ namespace MRP_DAL.Repositories
 
         public async Task<int> CreateUserAsync(string username)
         {
-            const string sql = @"
+            const string sqlScript = @"
                 INSERT INTO users (username)
                 VALUES (@username)
                 RETURNING id;";
 
-            using var cmd = new NpgsqlCommand(sql, _conn);
+            using var cmd = new NpgsqlCommand(sqlScript, _connection);
             cmd.Parameters.AddWithValue("username", username);
 
             var result = await cmd.ExecuteScalarAsync();
