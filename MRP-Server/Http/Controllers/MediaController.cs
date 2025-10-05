@@ -114,7 +114,7 @@ namespace MRP_Server.Http.Controllers
 
         private int? GetUserIdFromValidToken(HttpListenerRequest req, HttpListenerResponse res)
         {
-            var userId = 0;
+
             string? header = req.Headers["Authorization"];
 
             if (header == null || !header.StartsWith("Bearer "))
@@ -125,6 +125,7 @@ namespace MRP_Server.Http.Controllers
             }
 
             string token = header.Substring("Bearer ".Length);
+
             if (!_serverAuthService.ValidateToken(token))
             {
                 res.StatusCode = 403;
@@ -139,8 +140,7 @@ namespace MRP_Server.Http.Controllers
                 return null;
             }
 
-            userId = _serverAuthService.TokenUserId.Value;
-            return null;
+            return _serverAuthService.TokenUserId;
         }
     }
 }
