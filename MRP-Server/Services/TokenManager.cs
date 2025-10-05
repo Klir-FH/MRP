@@ -51,15 +51,19 @@ namespace MRP_Server.Services
                 ValidateIssuer = true,
                 ValidateAudience = false,
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-                //NameClaimType = JwtRegisteredClaimNames.Sub
+                ClockSkew = TimeSpan.Zero,
+                NameClaimType = JwtRegisteredClaimNames.Sub
             };
 
 
             try
             {
                 var principal = handler.ValidateToken(token, parameters, out _);
-                Subject = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+                Subject =
+                    principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ??
+                    principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+                    principal.Identity?.Name;
 
                 var uidClaim = principal.FindFirst("uid")?.Value;
                 if (int.TryParse(uidClaim, out var id))
@@ -67,8 +71,9 @@ namespace MRP_Server.Services
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[JWT ERROR] {ex.Message}");
                 return false;
             }
         }
