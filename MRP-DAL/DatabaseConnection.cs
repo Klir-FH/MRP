@@ -4,6 +4,7 @@ namespace MRP_DAL
 {
     public class DatabaseConnection
     {
+        // TODO: move conn string to appsettings
         public const string connectionString = "Host=localhost;Port=15432;Database=mrpdb;Username=mrp_admin;Password=admin";
         public NpgsqlConnection? Connection { get; set; }
         public void StartConnection()

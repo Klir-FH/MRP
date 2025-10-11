@@ -91,6 +91,7 @@ namespace MRP_Server.Services
                 }
                 catch (Exception)
                 {
+                    // HACK: no Exception handling yet
                 }
 
             }
@@ -109,16 +110,13 @@ namespace MRP_Server.Services
 
         private void SaveRsaKeyToFile(RsaSecurityKey rsaSecurityKey, string filePath)
         {
-
             var obj = JsonConvert.SerializeObject(rsaSecurityKey.Parameters);
 
             File.WriteAllText(filePath, obj);
-
         }
 
         private RsaSecurityKey LoadRsaKeyFromFile(string filePath)
         {
-
             var param = JsonConvert.DeserializeObject<RSAParameters>(File.ReadAllText(filePath));
 
             RsaSecurityKey key = new RsaSecurityKey(param);

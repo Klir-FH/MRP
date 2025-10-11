@@ -25,12 +25,10 @@ namespace MRP_Server.Services
         public async Task<string?> TryLoginAsync(string username, string password)
         {
             var valid = await _authService.VerifyCredentialsAsync(username, password);
-            if (!valid)
-                return null;
+            if (!valid) return null;
 
             var userId = await _userRepository.GetUserIdByUsernameAsync(username);
-            if (userId == null)
-                return null;
+            if (userId == null) return null;
 
             return _tokenManager.GenerateJwtToken(username, userId.Value);
         }
@@ -42,8 +40,7 @@ namespace MRP_Server.Services
 
         public string? GetTokenSubject(string token)
         {
-            if (!_tokenManager.ValidateToken(token))
-                return null;
+            if (!_tokenManager.ValidateToken(token)) return null;
 
             return _tokenManager.Subject;
         }

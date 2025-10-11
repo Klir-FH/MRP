@@ -31,7 +31,11 @@ namespace MRP_Server.Http.Helpers
         public static async Task WriteJsonAsync(HttpListenerResponse httpRequest, object obj)
         {
             httpRequest.ContentType = "application/json";
-            string json = JsonConvert.SerializeObject(obj);
+            string json = JsonConvert.SerializeObject(obj, new JsonSerializerSettings
+            {
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                Formatting = Formatting.Indented
+            });
             byte[] bytes = Encoding.UTF8.GetBytes(json);
             await httpRequest.OutputStream.WriteAsync(bytes);
         }

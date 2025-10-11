@@ -1,4 +1,5 @@
-﻿using MRP.Models;
+﻿using Models.DTOs;
+using MRP.Models;
 using MRP_DAL;
 using MRP_DAL.Interfaces;
 using MRP_Server.Http.Helpers;
@@ -77,7 +78,7 @@ namespace MRP_Server.Http.Controllers
 
             using var reader = new StreamReader(httpRequest.InputStream, httpRequest.ContentEncoding);
             var body = await reader.ReadToEndAsync();
-            var entry = JsonConvert.DeserializeObject<MediaEntry>(body);
+            var entry = JsonConvert.DeserializeObject<MediaEntryDTO>(body);
 
             if (entry == null || string.IsNullOrWhiteSpace(entry.Title))
             {

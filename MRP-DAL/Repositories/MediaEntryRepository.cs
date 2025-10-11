@@ -1,4 +1,5 @@
-﻿using MRP.Models;
+﻿using Models.DTOs;
+using MRP.Models;
 using MRP_DAL.Interfaces;
 using Npgsql;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace MRP_DAL.Repositories
             _connection = connection;
         }
 
-        public async Task<int> CreateAsync(MediaEntry media)
+        public async Task<int> CreateAsync(MediaEntryDTO media)
         {
             const string sqlScript = @"
                 INSERT INTO media_entries (title, description, release_year, age_restriction, type, owner_id)
@@ -34,7 +35,7 @@ namespace MRP_DAL.Repositories
             return Convert.ToInt32(result);
         }
 
-        public async Task<List<MediaEntry>> GetAllAsync()
+        public async Task<List<MediaEntryDTO>> GetAllAsync()
         {
             const string sqlScript = @"
                 SELECT id, title, description, release_year, age_restriction, type, owner_id
@@ -43,10 +44,10 @@ namespace MRP_DAL.Repositories
             using var cmd = new NpgsqlCommand(sqlScript, _connection);
             using var reader = await cmd.ExecuteReaderAsync();
 
-            var allMedia = new List<MediaEntry>();
+            var allMedia = new List<MediaEntryDTO>();
             while (await reader.ReadAsync())
             {
-                allMedia.Add(new MediaEntry
+                allMedia.Add(new MediaEntryDTO
                 {
                     Id = reader.GetInt32(0),
                     Title = reader.GetString(1),

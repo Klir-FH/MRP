@@ -11,24 +11,40 @@ namespace MRP_Server
     {
         static async Task Main(string[] args)
         {
-            DatabaseConnection database = new();
-            database.StartConnection();
-            var connection = database.Connection;
+            var connection = InitializeDatabase();
 
-            var userRepo = new UserRepository(connection);
-            var credentialsRepo = new CredentialsRepository(connection);
-            var mediaRepo = new MediaEntryRepository(connection);
+            var serverAuthService = BuildServices(connection);
 
-            var Auth = new AuthService(credentialsRepo, userRepo);
-            var tokenManager = new TokenManager();
-            var serverAuth = new ServerAuthService(Auth, userRepo, tokenManager);
-
-            var userController = new UserController(serverAuth);
-            var mediaController = new MediaController(mediaRepo,serverAuth);
+            var userController = new UserController(serverAuthService);
+            var mediaController = new MediaController(new MediaEntryRepository(connection), serverAuthService);
 
             var server = new HttpServer(userController, mediaController);
+
             await server.StartAsync("http://localhost:8080/");
 
+        }
+
+        private static Npgsql.NpgsqlConnection? InitializeDatabase()
+        {
+            var db = new DatabaseConnection();
+            db.StartConnection();
+
+            if (db.Connection is null)
+            {
+                return null;
+            }
+
+            return db.Connection!;
+        }
+
+        private static ServerAuthService BuildServices(Npgsql.NpgsqlConnection connection)
+        {
+            var userRepo = new UserRepository(connection);
+            var credentialsRepo = new CredentialsRepository(connection);
+            var authService = new AuthService(credentialsRepo, userRepo);
+            var tokenManager = new TokenManager();
+
+            return new ServerAuthService(authService, userRepo, tokenManager);
         }
     }
 }

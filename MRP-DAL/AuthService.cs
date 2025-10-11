@@ -20,7 +20,7 @@ namespace MRP_DAL
             var storedHash = await _credentialsRepository.GetHashedPasswordByUsernameAsync(username);
             return storedHash != null && BCrypt.Net.BCrypt.Verify(password, storedHash);
         }
-
+        //TODO: Use CredentialsDTO
         public async Task<bool> RegisterAsync(string username, string password)
         {
 

@@ -1,6 +1,7 @@
 ﻿using MRP_Server.Services;
 using MRP_Server.Http.Helpers;
 using System.Net;
+using Models.DTOs;
 
 namespace MRP_Server.Http.Controllers
 {
@@ -49,30 +50,34 @@ namespace MRP_Server.Http.Controllers
 
         private async Task RegisterAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
         {
-            var data = await JsonSerializationHelper.ReadJsonAsync<Dictionary<string, string>>(httpRequest);
-            if (data == null || !data.ContainsKey("username") || !data.ContainsKey("password"))
+            var creds = await JsonSerializationHelper.ReadJsonAsync<LoginDTO>(httpRequest);
+
+            if (creds == null || string.IsNullOrWhiteSpace(creds.Username) || string.IsNullOrWhiteSpace(creds.Password))
             {
                 httpResponse.StatusCode = 400;
                 await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Invalid JSON body" });
                 return;
             }
 
-            bool created = await _serverAuthService.RegisterAsync(data["username"], data["password"]);
+            bool created = await _serverAuthService.RegisterAsync(creds.Username, creds.Password);
+
             httpResponse.StatusCode = created ? 201 : 400;
             await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { success = created });
         }
 
         private async Task LoginAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
         {
-            var data = await JsonSerializationHelper.ReadJsonAsync<Dictionary<string, string>>(httpRequest);
-            if (data == null || !data.ContainsKey("username") || !data.ContainsKey("password"))
+            var creds = await JsonSerializationHelper.ReadJsonAsync<LoginDTO>(httpRequest);
+
+            if (creds == null || string.IsNullOrWhiteSpace(creds.Username) || string.IsNullOrWhiteSpace(creds.Password))
             {
                 httpResponse.StatusCode = 400;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Invalid JSON body" });
+                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Invalid request body" });
                 return;
             }
 
-            var token = await _serverAuthService.TryLoginAsync(data["username"], data["password"]);
+            var token = await _serverAuthService.TryLoginAsync(creds.Username, creds.Password);
+
             if (token == null)
             {
                 httpResponse.StatusCode = 401;
@@ -84,27 +89,45 @@ namespace MRP_Server.Http.Controllers
             await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { token });
         }
 
-        private async Task ProfileAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
+        private async Task ProfileAsync(HttpListenerRequest req, HttpListenerResponse res)
         {
-            string? authHeader = httpRequest.Headers["Authorization"];
-            if (authHeader == null || !authHeader.StartsWith("Bearer "))
-            {
-                httpResponse.StatusCode = 401;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Missing or invalid Authorization header" });
+            var validation = ValidateAndExtractToken(req, res);
+            if (!validation.IsValid)
                 return;
+
+            var username = validation.Username ?? "unknown";
+
+            // TODO: replace with actuall response
+
+            res.StatusCode = 200;
+            await JsonSerializationHelper.WriteJsonAsync(res, new UserProfileDTO
+            {
+                Username = username,
+                Message = $"Welcome to your profile, {username}!"
+            });
+        }
+
+        private (bool IsValid, string? Username) ValidateAndExtractToken(HttpListenerRequest req, HttpListenerResponse res)
+        {
+            string? header = req.Headers["Authorization"];
+            if (header == null || !header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                res.StatusCode = 401;
+                JsonSerializationHelper.WriteJsonAsync(res, new { error = "Missing or invalid Authorization header" }).Wait();
+                return (false, null);
             }
 
-            string token = authHeader.Substring("Bearer ".Length);
+            string token = header.Substring("Bearer ".Length);
+
             if (!_serverAuthService.ValidateToken(token))
             {
-                httpResponse.StatusCode = 403;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Invalid or expired token" });
-                return;
+                res.StatusCode = 403;
+                JsonSerializationHelper.WriteJsonAsync(res, new { error = "Invalid or expired token" }).Wait();
+                return (false, null);
             }
 
-            string username = _serverAuthService.GetTokenSubject(token) ?? "unknown";
-            httpResponse.StatusCode = 200;
-            await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { username, message = $"Welcome to your profile, {username}!" });
+            string? username = _serverAuthService.GetTokenSubject(token);
+            return (true, username);
         }
     }
 }

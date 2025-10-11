@@ -1,4 +1,5 @@
-﻿using MRP.Models;
+﻿using Models.DTOs;
+using MRP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,8 @@ namespace MRP_DAL.Interfaces
 {
     public interface IMediaEntryRepository
     {
-        Task<int> CreateAsync(MediaEntry media);
-        Task<List<MediaEntry>> GetAllAsync();
+        Task<int> CreateAsync(MediaEntryDTO media);
+        Task<List<MediaEntryDTO>> GetAllAsync();
         Task<bool> DeleteAsync(int id, int ownerId);
     }
 }

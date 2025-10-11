@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,7 @@ namespace MRP.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public string ReleaseYear { get; set; }
-        public List<string> Genres { get; set; } = new();
+        public List<Genre> Genres { get; set; } = new();
         public int? AgeRestriction { get; set; }
 
         public int? OwnerId { get; set; } = null;

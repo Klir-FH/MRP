@@ -14,6 +14,7 @@ namespace Models.DTOs
         public string? Description { get; set; }
         public string? ReleaseYear { get; set; }
         public int? AgeRestriction { get; set; }
+        public int? OwnerId { get; set; } = null;
         public MediaType Type { get; set; }
     }
 }
