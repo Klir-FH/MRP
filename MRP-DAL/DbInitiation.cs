@@ -69,14 +69,24 @@ namespace MRP_DAL
         CREATE TABLE IF NOT EXISTS user_media_interactions (
             user_id INT NOT NULL,
             media_entry_id INT NOT NULL,
-            interaction_type INT NOT NULL, -- stores UserMediaInteractionType enum (0=Like, 1=Favourite)
+            interaction_type INT NOT NULL,
             PRIMARY KEY (user_id, media_entry_id, interaction_type),
             CONSTRAINT fk_umi_user FOREIGN KEY (user_id)
                 REFERENCES users (id) ON DELETE CASCADE,
             CONSTRAINT fk_umi_media FOREIGN KEY (media_entry_id)
                 REFERENCES media_entries (id) ON DELETE CASCADE
         );
-        ";
+        
+CREATE TABLE IF NOT EXISTS user_rating_interactions (
+    user_id INT NOT NULL,
+    rating_id INT NOT NULL,
+    interaction_type INT NOT NULL DEFAULT 0, 
+    PRIMARY KEY (user_id, rating_id, interaction_type),
+    CONSTRAINT fk_uri_user FOREIGN KEY (user_id)
+        REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_uri_rating FOREIGN KEY (rating_id)
+        REFERENCES ratings (id) ON DELETE CASCADE
+);";
 
             using var cmd = new NpgsqlCommand(sql, _connection);
             cmd.ExecuteNonQuery();

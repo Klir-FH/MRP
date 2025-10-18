@@ -13,11 +13,12 @@ namespace MRP_Server.Http
         private readonly HttpListener _listener = new();
         private readonly UserController _userController;
         private readonly MediaController _mediaController;
-
-        public HttpServer(UserController userController, MediaController mediaController)
+        private readonly RatingsController _ratingsController;
+        public HttpServer(UserController userController, MediaController mediaController, RatingsController ratingsController)
         {
             _userController = userController;
             _mediaController = mediaController;
+            _ratingsController = ratingsController;
         }
 
         public async Task StartAsync(string prefix)
@@ -40,6 +41,8 @@ namespace MRP_Server.Http
                 await _userController.HandleAsync(listenerContext);
             else if (path.StartsWith("/api/media"))
                 await _mediaController.HandleAsync(listenerContext);
+            else if (path.StartsWith("/api/ratings"))
+                await _ratingsController.HandleAsync(listenerContext);
             else
             {
                 listenerContext.Response.StatusCode = 404;

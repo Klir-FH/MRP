@@ -23,7 +23,7 @@ namespace MRP_Server
     [Singleton<CredentialsRepository>()]
     [Singleton<IMediaEntryRepository, MediaEntryRepository>]
     [Singleton<IUserRepository, UserRepository>]
-
+    [Singleton<IRatingRepository, RatingRepository>]
 
     [Singleton<AuthService>()]
     [Singleton<TokenManager>()]
@@ -31,6 +31,7 @@ namespace MRP_Server
 
     [Transient<UserController>()]
     [Transient<MediaController>()]
+    [Transient<RatingsController>()]
 
     [Singleton<HttpServer>()] 
     public partial class ServiceProvider {

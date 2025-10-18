@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Models
 {
-    public enum UserMediaInteractionType
+    public enum userMediaInteractions
     {
         Like = 0,
         Favourite = 1
