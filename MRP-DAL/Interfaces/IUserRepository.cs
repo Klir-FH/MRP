@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Models.DTOs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,5 +11,6 @@ namespace MRP_DAL.Interfaces
     {
         Task<int?> GetUserIdByUsernameAsync(string username);
         Task<int> CreateUserAsync(string username);
+        Task<UserProfileStatisticsDTO?> GetUserProfileStatsAsync(string username, CancellationToken ct = default);
     }
 }

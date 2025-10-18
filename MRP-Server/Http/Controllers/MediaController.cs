@@ -2,6 +2,7 @@
 using MRP.Models;
 using MRP_DAL;
 using MRP_DAL.Interfaces;
+using MRP_DAL.Repositories;
 using MRP_Server.Http.Helpers;
 using MRP_Server.Services;
 using Newtonsoft.Json;
@@ -16,14 +17,17 @@ namespace MRP_Server.Http.Controllers
 {
     public class MediaController
     {
-        private readonly IMediaEntryRepository _mediaRepo;
+        private readonly IMediaEntryRepository _mediaRepository;
         private readonly ServerAuthService _serverAuthService;
+        private readonly IUserRepository _userRepository;
 
 
-        public MediaController(IMediaEntryRepository mediaRepo, ServerAuthService serverAuthService)
+
+        public MediaController(IMediaEntryRepository mediaRepo, ServerAuthService serverAuthService, IUserRepository userRepository)
         {
-            _mediaRepo = mediaRepo;
+            _mediaRepository = mediaRepo;
             _serverAuthService = serverAuthService;
+            _userRepository = userRepository;
         }
 
         public async Task HandleAsync(HttpListenerContext listenerContext)
@@ -66,15 +70,17 @@ namespace MRP_Server.Http.Controllers
 
         private async Task HandleGetAsync(HttpListenerResponse httpResponse)
         {
-            var media = await _mediaRepo.GetAllAsync();
+            var media = await _mediaRepository.GetAllAsync();
             httpResponse.StatusCode = 200;
             await JsonSerializationHelper.WriteJsonAsync(httpResponse, media);
         }
 
         private async Task HandleCreateAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
         {
-            var userId = GetUserIdFromValidToken(httpRequest, httpResponse);
-            if (userId == null) return;
+            var (isValid, username) = AuthHelper.ValidateAndExtractToken(httpRequest, httpResponse, _serverAuthService);
+            if (!isValid || string.IsNullOrEmpty(username)) return;
+
+            int? userId = await _userRepository.GetUserIdByUsernameAsync(username);
 
             using var reader = new StreamReader(httpRequest.InputStream, httpRequest.ContentEncoding);
             var body = await reader.ReadToEndAsync();
@@ -89,15 +95,17 @@ namespace MRP_Server.Http.Controllers
 
             entry.OwnerId = userId;
 
-            var id = await _mediaRepo.CreateAsync(entry);
+            var id = await _mediaRepository.CreateAsync(entry);
             httpResponse.StatusCode = 201;
             await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { id });
         }
 
         private async Task HandleDeleteAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
         {
-            var userId = GetUserIdFromValidToken(httpRequest, httpResponse);
-            if (userId == null) return;
+            var (isValid, username) = AuthHelper.ValidateAndExtractToken(httpRequest, httpResponse, _serverAuthService);
+            if (!isValid || string.IsNullOrEmpty(username)) return;
+
+            int? userId = await _userRepository.GetUserIdByUsernameAsync(username);
 
             var query = httpRequest.QueryString;
             if (!int.TryParse(query["id"], out int mediaId))
@@ -107,41 +115,11 @@ namespace MRP_Server.Http.Controllers
                 return;
             }
 
-            bool deleted = await _mediaRepo.DeleteAsync(mediaId, (int)userId);
+            bool deleted = await _mediaRepository.DeleteAsync(mediaId, (int)userId);
 
             httpResponse.StatusCode = deleted ? 200 : 404;
             await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { success = deleted });
         }
 
-        private int? GetUserIdFromValidToken(HttpListenerRequest req, HttpListenerResponse res)
-        {
-
-            string? header = req.Headers["Authorization"];
-
-            if (header == null || !header.StartsWith("Bearer "))
-            {
-                res.StatusCode = 401;
-                JsonSerializationHelper.WriteJsonAsync(res, new { error = "Missing Authorization header" }).Wait();
-                return null;
-            }
-
-            string token = header.Substring("Bearer ".Length);
-
-            if (!_serverAuthService.ValidateToken(token))
-            {
-                res.StatusCode = 403;
-                JsonSerializationHelper.WriteJsonAsync(res, new { error = "Invalid or expired token" }).Wait();
-                return null;
-            }
-
-            if (_serverAuthService.TokenUserId == null)
-            {
-                res.StatusCode = 403;
-                JsonSerializationHelper.WriteJsonAsync(res, new { error = "Token missing user ID" }).Wait();
-                return null;
-            }
-
-            return _serverAuthService.TokenUserId;
-        }
     }
 }

@@ -22,6 +22,8 @@ namespace MRP_Server
     [Singleton<UserRepository>()]
     [Singleton<CredentialsRepository>()]
     [Singleton<IMediaEntryRepository, MediaEntryRepository>]
+    [Singleton<IUserRepository, UserRepository>]
+
 
     [Singleton<AuthService>()]
     [Singleton<TokenManager>()]

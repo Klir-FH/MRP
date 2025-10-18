@@ -16,3 +16,5 @@ My third tier is the Models representing all DTOS and entities using in communic
 Ive decided on using a JWT based Authentication while also utilizing RSA encryption because i liked the challenge.
 
 Credentials to User is a 1:n relationship. This is for a possible future addition of MFA.
+
+The User Model exists to assist as a representation of the table. In this small project i write directly into

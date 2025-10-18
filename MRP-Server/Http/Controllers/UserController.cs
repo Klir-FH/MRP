@@ -1,17 +1,20 @@
-﻿using MRP_Server.Services;
+﻿using Models.DTOs;
+using MRP_DAL.Repositories;
 using MRP_Server.Http.Helpers;
+using MRP_Server.Services;
 using System.Net;
-using Models.DTOs;
 
 namespace MRP_Server.Http.Controllers
 {
     public class UserController
     {
         private readonly ServerAuthService _serverAuthService;
+        private readonly UserRepository _userRepository;
 
-        public UserController(ServerAuthService authService)
+        public UserController(ServerAuthService authService, UserRepository userRepository)
         {
             _serverAuthService = authService;
+            _userRepository = userRepository;
         }
 
         public async Task HandleAsync(HttpListenerContext listenerContext)
@@ -28,8 +31,8 @@ namespace MRP_Server.Http.Controllers
                     await RegisterAsync(httpRequest, httpResponse);
                 else if (method == "POST" && path == "/api/users/login")
                     await LoginAsync(httpRequest, httpResponse);
-                else if (method == "GET" && path.StartsWith("/api/users/"))
-                    await ProfileAsync(httpRequest, httpResponse);
+                else if (method == "GET" && path.EndsWith("/profile"))
+                    await HandleUserProfileRequest(httpRequest, httpResponse);
                 else
                 {
                     httpResponse.StatusCode = 404;
@@ -89,45 +92,36 @@ namespace MRP_Server.Http.Controllers
             await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { token });
         }
 
-        private async Task ProfileAsync(HttpListenerRequest req, HttpListenerResponse res)
+        private async Task HandleUserProfileRequest(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
         {
-            var validation = ValidateAndExtractToken(req, res);
-            if (!validation.IsValid)
+
+            var (isValid, tokenUsername) = AuthHelper.ValidateAndExtractToken(httpRequest, httpResponse,_serverAuthService);
+            if (!isValid || string.IsNullOrWhiteSpace(tokenUsername))
                 return;
 
-            var username = validation.Username ?? "unknown";
+            string username = httpRequest.Url?.Segments.Reverse().Skip(1).FirstOrDefault()?.Trim('/') ?? "";
 
-            // TODO: replace with actuall response
+            var stats = await _userRepository.GetUserProfileStatsAsync(username);
 
-            res.StatusCode = 200;
-            await JsonSerializationHelper.WriteJsonAsync(res, new UserProfileDTO
+            // can only see their own profile
+            // TODO: Visibility Settings
+            if (!string.Equals(username, tokenUsername, StringComparison.OrdinalIgnoreCase))
             {
-                Username = username,
-                Message = $"Welcome to your profile, {username}!"
-            });
-        }
-
-        private (bool IsValid, string? Username) ValidateAndExtractToken(HttpListenerRequest req, HttpListenerResponse res)
-        {
-            string? header = req.Headers["Authorization"];
-            if (header == null || !header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            {
-                res.StatusCode = 401;
-                JsonSerializationHelper.WriteJsonAsync(res, new { error = "Missing or invalid Authorization header" }).Wait();
-                return (false, null);
+                httpResponse.StatusCode = 403;
+                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Access denied" });
+                return;
             }
 
-            string token = header.Substring("Bearer ".Length);
-
-            if (!_serverAuthService.ValidateToken(token))
+            if (stats == null)
             {
-                res.StatusCode = 403;
-                JsonSerializationHelper.WriteJsonAsync(res, new { error = "Invalid or expired token" }).Wait();
-                return (false, null);
+                httpResponse.StatusCode = 404;
+                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "User not found" });
+                return;
             }
 
-            string? username = _serverAuthService.GetTokenSubject(token);
-            return (true, username);
+            httpResponse.StatusCode = 200;
+            await JsonSerializationHelper.WriteJsonAsync(httpResponse, stats);
         }
+
     }
 }
