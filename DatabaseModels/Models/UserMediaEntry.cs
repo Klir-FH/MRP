@@ -10,9 +10,7 @@ namespace Models
     {
         public int UserID { get; set; }
         public int MediaEntryId { get; set; }
-        // Type define wether its a favourite or like
-        public userMediaInteractions Type { get; set; }
-
+        public UserMediaInteractions Type { get; set; }
 
     }
 }

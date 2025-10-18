@@ -17,4 +17,7 @@ Ive decided on using a JWT based Authentication while also utilizing RSA encrypt
 
 Credentials to User is a 1:n relationship. This is for a possible future addition of MFA.
 
-The User Model exists to assist as a representation of the table. In this small project i write directly into
+Added JAB for compile time DI.
+
+I generally use most of the Models as representations of the DB. Due to the low complexity, data is mostly written directly into the db without being parsed into the corresponding Model.
+
