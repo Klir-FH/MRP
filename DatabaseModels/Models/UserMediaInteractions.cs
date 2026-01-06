@@ -8,7 +8,8 @@ namespace Models
 {
     public enum UserMediaInteractions
     {
-        Like = 0,
-        Favourite = 1
+    
+        Favourite = 0,
+        Like = 1
     }
 }

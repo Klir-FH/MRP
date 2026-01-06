@@ -3,179 +3,133 @@ using MRP_DAL.Interfaces;
 using MRP_Server.Http.Helpers;
 using MRP_Server.Services;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MRP_Server.Http.Controllers
 {
-
     public class RatingsController
     {
-        private readonly IRatingRepository _ratingRepository;
-        private readonly IUserRepository _userRepository;
-        private readonly ServerAuthService _serverAuthService;
+        private readonly IRatingRepository _ratings;
+        private readonly IUserRepository _users;
+        private readonly ServerAuthService _auth;
 
         public RatingsController(IRatingRepository ratingRepository, IUserRepository userRepository, ServerAuthService serverAuthService)
         {
-            _ratingRepository = ratingRepository;
-            _userRepository = userRepository;
-            _serverAuthService = serverAuthService;
+            _ratings = ratingRepository;
+            _users = userRepository;
+            _auth = serverAuthService;
         }
 
-        public async Task HandleAsync(HttpListenerContext listenerContext)
+        public async Task HandleAsync(HttpListenerContext ctx)
         {
-            var httpRequest = listenerContext.Request;
-            var httpResponse = listenerContext.Response;
-            var path = httpRequest.Url?.AbsolutePath ?? "";
+            var req = ctx.Request;
+            var res = ctx.Response;
+            var path = (req.Url?.AbsolutePath ?? "").TrimEnd('/');
+
             try
             {
-                switch (httpRequest.HttpMethod)
+                switch (req.HttpMethod.ToUpperInvariant())
                 {
-                    case "POST" when path.EndsWith("/like", StringComparison.OrdinalIgnoreCase):
-                        await HandleLikeAsync(httpRequest, httpResponse);
-                        break;
-                    case "DELETE":
-                        await HandleUnlikeAsync(httpRequest, httpResponse);
-                        break;
-                    case "PATCH": // partial change
-                        await HandleConfirmAsync(httpRequest, httpResponse);
-                        break;
-                    case "GET":
-                        await GetRatingsAsync(httpRequest, httpResponse);
-                        break;
-                    case "POST":
-                        await CreateRatingAsync(httpRequest, httpResponse);
-                        break;
+                    case "PUT" when RouteHelper.TryGetIdAfterPrefix(path, "/api/ratings/", out var ratingIdPut):
+                        await HandleUpdateAsync(req, res, ratingIdPut);
+                        return;
+
+                    case "DELETE" when RouteHelper.TryGetIdAfterPrefix(path, "/api/ratings/", out var ratingIdDel):
+                        await HandleDeleteAsync(req, res, ratingIdDel);
+                        return;
+
+                    case "POST" when RouteHelper.TryGetIdBeforeSuffix(path, "/api/ratings/", "confirm", out var ratingIdConfirm):
+                        await HandleConfirmAsync(req, res, ratingIdConfirm);
+                        return;
+
+                    case "POST" when RouteHelper.TryGetIdBeforeSuffix(path, "/api/ratings/", "like", out var ratingIdLike):
+                        await HandleLikeAsync(req, res, ratingIdLike);
+                        return;
+
                     default:
-                        httpResponse.StatusCode = 405;
-                        await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Method not allowed" });
-                        break;
+                        res.StatusCode = 404;
+                        await JsonSerializationHelper.WriteJsonAsync(res, new { error = "Endpoint not found" });
+                        return;
                 }
             }
             catch (Exception ex)
             {
-                httpResponse.StatusCode = 500;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = ex.Message });
+                res.StatusCode = 500;
+                await JsonSerializationHelper.WriteJsonAsync(res, new { error = ex.Message });
             }
-            finally { httpResponse.Close(); }
-        }
-
-        private async Task GetRatingsAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
-        {
-            if (!int.TryParse(httpRequest.QueryString["mediaId"], out var mediaId))
+            finally
             {
-                httpResponse.StatusCode = 400;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Missing or invalid mediaId" });
-                return;
+                res.Close();
             }
-
-            var list = await _ratingRepository.GetByMediaAsync(mediaId);
-            httpResponse.StatusCode = 200;
-            await JsonSerializationHelper.WriteJsonAsync(httpResponse, list);
         }
-        private async Task CreateRatingAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
-        {
-            var (isValid, username) = AuthHelper.ValidateAndExtractToken(httpRequest, httpResponse, _serverAuthService);
-            if (!isValid || string.IsNullOrEmpty(username)) return;
 
-            int? userId = await _userRepository.GetUserIdByUsernameAsync(username);
+        private async Task<int?> RequireTokenUserIdAsync(HttpListenerRequest req, HttpListenerResponse res)
+        {
+            var (ok, username) = await AuthHelper.ValidateAndExtractTokenAsync(req, res, _auth);
+            if (!ok || string.IsNullOrWhiteSpace(username)) return null;
+
+            var userId = await _users.GetUserIdByUsernameAsync(username);
             if (userId == null)
             {
-                httpResponse.StatusCode = 404;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "User not found" });
-                return;
+                res.StatusCode = 404;
+                await JsonSerializationHelper.WriteJsonAsync(res, new { error = "User not found" });
+                return null;
             }
 
-            var dto = await JsonSerializationHelper.ReadJsonAsync<Rating>(httpRequest);
+            return userId.Value;
+        }
+
+        private async Task HandleUpdateAsync(HttpListenerRequest req, HttpListenerResponse res, int ratingId)
+        {
+            var userId = await RequireTokenUserIdAsync(req, res);
+            if (userId == null) return;
+
+            var dto = await JsonSerializationHelper.ReadJsonAsync<Rating>(req);
             if (dto == null || dto.StarValue < 1 || dto.StarValue > 5)
             {
-                httpResponse.StatusCode = 400;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Invalid rating data" });
+                res.StatusCode = 400;
+                await JsonSerializationHelper.WriteJsonAsync(res, new { error = "Invalid rating data" });
                 return;
             }
 
-            dto.OwnerId = userId.Value;
-            int id = await _ratingRepository.CreateAsync(dto);
-            httpResponse.StatusCode = 201;
-            await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { id });
-        }
-        private async Task HandleLikeAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
-        {
-            var (isValid, username) = AuthHelper.ValidateAndExtractToken(httpRequest, httpResponse, _serverAuthService);
-            if (!isValid || string.IsNullOrEmpty(username)) return;
+            var ok = await _ratings.UpdateAsync(ratingId, userId.Value, dto.StarValue, dto.Comment);
 
-            int? userId = await _userRepository.GetUserIdByUsernameAsync(username);
-            if (userId == null)
-            {
-                httpResponse.StatusCode = 404;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "User not found" });
-                return;
-            }
-
-            if (!int.TryParse(httpRequest.QueryString["ratingId"], out var ratingId))
-            {
-                httpResponse.StatusCode = 400;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Missing or invalid ratingId" });
-                return;
-            }
-
-            bool liked = await _ratingRepository.LikeRatingAsync(ratingId, userId.Value);
-            httpResponse.StatusCode = liked ? 200 : 409;
-            await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { success = liked });
+            res.StatusCode = ok ? 200 : 403;
+            await JsonSerializationHelper.WriteJsonAsync(res, new { success = ok });
         }
 
-        private async Task HandleUnlikeAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
+        private async Task HandleDeleteAsync(HttpListenerRequest req, HttpListenerResponse res, int ratingId)
         {
-            var (isValid, username) = AuthHelper.ValidateAndExtractToken(httpRequest, httpResponse, _serverAuthService);
-            if (!isValid || string.IsNullOrEmpty(username)) return;
+            var userId = await RequireTokenUserIdAsync(req, res);
+            if (userId == null) return;
 
-            int? userId = await _userRepository.GetUserIdByUsernameAsync(username);
-            if (userId == null)
-            {
-                httpResponse.StatusCode = 404;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "User not found" });
-                return;
-            }
+            var ok = await _ratings.DeleteAsync(ratingId, userId.Value);
 
-            if (!int.TryParse(httpRequest.QueryString["ratingId"], out var ratingId))
-            {
-                httpResponse.StatusCode = 400;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Missing or invalid ratingId" });
-                return;
-            }
-
-            bool unliked = await _ratingRepository.UnlikeRatingAsync(ratingId, userId.Value);
-            httpResponse.StatusCode = unliked ? 200 : 404;
-            await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { success = unliked });
+            res.StatusCode = ok ? 204 : 403;
+            await JsonSerializationHelper.WriteJsonAsync(res, new { success = ok });
         }
 
-        private async Task HandleConfirmAsync(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse)
+        private async Task HandleConfirmAsync(HttpListenerRequest req, HttpListenerResponse res, int ratingId)
         {
-            var (isValid, username) = AuthHelper.ValidateAndExtractToken(httpRequest, httpResponse, _serverAuthService);
-            if (!isValid || string.IsNullOrEmpty(username)) return;
+            var userId = await RequireTokenUserIdAsync(req, res);
+            if (userId == null) return;
 
-            int? userId = await _userRepository.GetUserIdByUsernameAsync(username);
-            if (userId == null)
-            {
-                httpResponse.StatusCode = 404;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "User not found" });
-                return;
-            }
+            var ok = await _ratings.ConfirmCommentAsync(ratingId, userId.Value);
 
-            if (!int.TryParse(httpRequest.QueryString["ratingId"], out var ratingId))
-            {
-                httpResponse.StatusCode = 400;
-                await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { error = "Missing or invalid ratingId" });
-                return;
-            }
+            res.StatusCode = ok ? 200 : 403;
+            await JsonSerializationHelper.WriteJsonAsync(res, new { success = ok });
+        }
 
-            bool confirmed = await _ratingRepository.ConfirmCommentAsync(ratingId, userId.Value);
-            httpResponse.StatusCode = confirmed ? 200 : 403;
-            await JsonSerializationHelper.WriteJsonAsync(httpResponse, new { success = confirmed });
+        private async Task HandleLikeAsync(HttpListenerRequest req, HttpListenerResponse res, int ratingId)
+        {
+            var userId = await RequireTokenUserIdAsync(req, res);
+            if (userId == null) return;
+
+            var ok = await _ratings.LikeRatingAsync(ratingId, userId.Value);
+
+            res.StatusCode = ok ? 200 : 409;
+            await JsonSerializationHelper.WriteJsonAsync(res, new { success = ok });
         }
     }
 }

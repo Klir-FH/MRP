@@ -24,11 +24,12 @@ namespace MRP_Server
     [Singleton<IMediaEntryRepository, MediaEntryRepository>]
     [Singleton<IUserRepository, UserRepository>]
     [Singleton<IRatingRepository, RatingRepository>]
-
+    [Singleton<IRecommendationRepository, RecommendationRepository>]
     [Singleton<AuthService>()]
     [Singleton<TokenManager>()]
     [Singleton<ServerAuthService>()]
 
+    [Transient<LeaderboardController>()]
     [Transient<UserController>()]
     [Transient<MediaController>()]
     [Transient<RatingsController>()]

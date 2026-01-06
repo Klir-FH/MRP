@@ -10,27 +10,55 @@ namespace MRP_Server.Http.Helpers
 {
     public static class AuthHelper
     {
-        public static (bool IsValid, string? Username) ValidateAndExtractToken(HttpListenerRequest req, HttpListenerResponse res, ServerAuthService authService)
+        public static async Task<(bool IsValid, string? username)> ValidateAndExtractTokenAsync(HttpListenerRequest request, HttpListenerResponse response, ServerAuthService authService)
         {
-            string? header = req.Headers["Authorization"];
-            if (header == null || !header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            var authHeader = request.Headers["Authentication"];
+
+            if (string.IsNullOrWhiteSpace(authHeader))
             {
-                res.StatusCode = 401;
-                JsonSerializationHelper.WriteJsonAsync(res, new { error = "Missing or invalid Authorization header" }).Wait();
+                await Write401(response, "Missing Authentication header");
                 return (false, null);
             }
 
-            string token = header.Substring("Bearer ".Length).Trim();
+            if (!authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                await Write401(response, "Invalid authentication scheme");
+                return (false, null);
+            }
+
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                await Write401(response, "Missing bearer token");
+                return (false, null);
+            }
 
             if (!authService.ValidateToken(token))
             {
-                res.StatusCode = 403;
-                JsonSerializationHelper.WriteJsonAsync(res, new { error = "Invalid or expired token" }).Wait();
+                await Write401(response, "Invalid or expired token");
                 return (false, null);
             }
 
-            string? username = authService.GetTokenSubject(token);
+            var username = authService.GetTokenSubject(token);
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                await Write401(response, "User not found");
+                return (false, null);
+            }
+
             return (true, username);
         }
+
+        private static async Task Write401(HttpListenerResponse response, string message)
+        {
+            response.StatusCode = 401;
+            response.ContentType = "application/json";
+
+            await JsonSerializationHelper.WriteJsonAsync(response, new
+            {
+                error = message
+            });
+        }
+
     }
 }
